@@ -1,4 +1,4 @@
-# Glucosa CYD · LibreLinkUp y Dexcom (v4)
+# Glucosa CYD · LibreLinkUp y Dexcom (v5)
 
 Muestra tu glucosa en una placa **CYD (ESP32-2432S028R)**: valor grande, tendencia, variación,
 barra de rango y últimas lecturas. Funciona con **FreeStyle Libre (LibreLinkUp)** y con **Dexcom
@@ -15,6 +15,7 @@ Basado en [mulscully/CYD_LibreLinkUp_glucose_ConfigScreen](https://github.com/mu
 
 ## Qué hay de nuevo respecto al original
 
+- **Alarma sonora opcional** con un altavoz: ver la sección «Alarma sonora» más abajo.
 - **Soporte para Dexcom** (Share) además de LibreLinkUp: se elige el servicio en el portal de configuración.
 - **Páginas de ayuda** `librelink.html` y `dexcom.html` en el instalador, con los pasos para crear o
   configurar la cuenta de cada servicio.
@@ -31,6 +32,32 @@ Basado en [mulscully/CYD_LibreLinkUp_glucose_ConfigScreen](https://github.com/mu
 - Corregido: el aviso de dato obsoleto solo se veía 1 segundo.
 - El historial de LibreLinkUp se pide cada 5 min en vez de cada minuto (menos peticiones).
 - Umbrales por defecto 70 / 180 mg/dL (los ya guardados en la placa se respetan).
+
+## Alarma sonora
+
+Si conectas un altavoz, la placa pita cuando la glucosa sale de tus umbrales:
+
+- Al salir del rango (por debajo del umbral bajo o por encima del alto) suena **5 segundos**.
+- Si sigue fuera del rango, vuelve a sonar **5 segundos cada 30 minutos**, sin límite.
+- Si vuelve al rango, el pitido se corta y **no suena más** hasta que vuelva a salir.
+- Con datos obsoletos o sin conexión no se dispara ni se reinicia nada.
+- Se activa o desactiva en el portal de configuración (desplegable «Alarma sonora»). Está activada por defecto
+  y, sin altavoz conectado, no hace nada.
+
+**Conexión.** La CYD lleva un amplificador de audio y un conector de 2 pines (JST 1.25 mm) para el altavoz,
+controlado desde GPIO26. Un altavoz pasivo de 8 Ω y 0,5–1 W con ese conector se enchufa directamente, sin
+cables ni soldaduras. Si el altavoz trae cables sueltos, hay que soldarlos a un conector de ese tipo o a los
+pads del propio conector.
+
+**Con un zumbador por cable** (en vez del conector), usa un pin libre (GPIO22 o GPIO27) y GND, y añade
+`-D ALARM_PIN=27` (o el que uses) a `build_flags` en `platformio.ini`. Un zumbador pequeño puede ir
+directo al pin; si consume más de unos 12 mA, hace falta un transistor.
+
+Constantes en `src/main.cpp`: tono (`ALARM_FREQ_HZ`) y volumen (`ALARM_DUTY`, 128 = máximo). Los tiempos
+(5 s y 30 min) están en `src/beeper.h`.
+
+> No es una alarma médica: depende del sensor, del móvil, de internet y de la API no oficial, y puede
+> retrasarse o no sonar. No la uses como única protección frente a una hipoglucemia.
 
 ## Instalación (usuario final)
 
@@ -74,6 +101,8 @@ pio device monitor    # consola serie a 115200
 ## Personalizar
 
 - **Colores, posiciones y textos**: `src/ui.h` (todo el dibujo está ahí, sin lógica de red).
+- **Alarma**: la lógica (cuándo suena) está en `src/beeper.h` y se prueba en el ordenador con
+  `tools/test_beeper.cpp`.
 - **Análisis de respuestas** (fechas, tendencias, errores de Dexcom): `src/parse.h`. Se prueba en el
   ordenador con `tools/test_parse.cpp` (las instrucciones están en la cabecera del archivo).
 - **Tamaño o tipo de fuente**: edita `FONT_SPECS` en `tools/make_fonts.py` y ejecuta

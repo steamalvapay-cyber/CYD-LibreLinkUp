@@ -1,5 +1,5 @@
 /*
- * CYD (ESP32-2432S028R) · Glucosa en pantalla — v4 (LibreLinkUp y Dexcom)
+ * CYD (ESP32-2432S028R) · Glucosa en pantalla — v5 (LibreLinkUp, Dexcom y alarma)
  * -----------------------------------------------------------------------------
  * Basado en mulscully/CYD_LibreLinkUp_glucose_ConfigScreen (MIT).
  *
@@ -8,6 +8,8 @@
  *     Dexcom Share (Dexcom G7 / G6 / ONE+), sin hub ni app.
  *   - Muestra el valor actual, la tendencia, la variación de los últimos ~5 min,
  *     la posición dentro del rango y las últimas lecturas.
+ *   - Alarma sonora opcional: si la glucosa sale de los umbrales suena 5 s, y vuelve a
+ *     sonar cada 30 min mientras siga fuera. Dentro del rango nunca suena.
  *   - No lleva credenciales en el código: en el primer arranque abre un portal
  *     WiFi ("CYD-Glucosa") donde se elige el servicio y se introducen WiFi,
  *     usuario y umbrales. Todo se guarda en la flash.
@@ -31,6 +33,7 @@
 #include "mbedtls/md.h"
 
 #include "parse.h"
+#include "beeper.h"
 #include "ui.h"
 
 // Cada cuánto se consulta la API (ms).
@@ -60,6 +63,16 @@ const int DELTA_SAMPLES = 5;
 // El botón BOOT de la CYD está en GPIO0.
 const int BOOT_BUTTON_PIN = 0;
 
+// Altavoz. La CYD lleva un amplificador y un conector de 2 pines (JST 1.25 mm) para el
+// altavoz, controlado desde GPIO26. Si montas un zumbador por cable en otro pin libre
+// (GPIO22 o GPIO27), cambia el número con -D ALARM_PIN=27 en platformio.ini.
+#ifndef ALARM_PIN
+#define ALARM_PIN 26
+#endif
+const int ALARM_PWM_CHANNEL = 4;   // canal PWM del ESP32 (el 0 y el 1 los usa WiFi/otros)
+const int ALARM_FREQ_HZ = 2000;    // tono del pitido
+const int ALARM_DUTY = 128;        // 128 = volumen máximo (50 %); más bajo = más suave
+
 TFT_eSPI tft = TFT_eSPI();
 Preferences prefs;
 
@@ -71,6 +84,7 @@ String accountUser;         // email (LibreLinkUp) o usuario/email/teléfono (De
 String accountPass;
 int lowThreshold = 70;
 int highThreshold = 180;
+bool alarmEnabled = true;   // alarma sonora (altavoz)
 
 // ---------------- Estado de la sesión ----------------
 String baseUrl = "https://api.libreview.io";   // LibreLinkUp (cambia según la región)
@@ -99,6 +113,7 @@ struct Reading {
 };
 
 bool fetchGlucoseViaGraph(const String& id, Reading& r);
+void alarmReset();   // definida más abajo, en la sección ALARMA SONORA
 
 // ============================================================
 // PORTAL DE CONFIGURACIÓN
@@ -114,6 +129,7 @@ void loadSavedConfig() {
   accountPass = prefs.getString("password", "");
   lowThreshold = prefs.getInt("low", 70);
   highThreshold = prefs.getInt("high", 180);
+  alarmEnabled = prefs.getInt("alarm", 1) != 0;
   provider = prefs.getString("provider", "libre") == "dexcom" ? PROV_DEXCOM : PROV_LIBRE;
   dexRegion = prefs.getString("region", "ous");
   if (dexRegion != "us" && dexRegion != "jp") dexRegion = "ous";
@@ -126,6 +142,7 @@ void saveConfig() {
   prefs.putString("password", accountPass);
   prefs.putInt("low", lowThreshold);
   prefs.putInt("high", highThreshold);
+  prefs.putInt("alarm", alarmEnabled ? 1 : 0);
   prefs.putString("provider", provider == PROV_DEXCOM ? "dexcom" : "libre");
   prefs.putString("region", dexRegion);
   prefs.end();
@@ -175,6 +192,7 @@ void runWiFiManagerSetup(bool forcePortal) {
   // los textos tienen que vivir en memoria estática.
   static char providerHtml[420];
   static char regionHtml[420];
+  static char alarmHtml[360];
   snprintf(providerHtml, sizeof(providerHtml),
            "<label for='provider'>Servicio</label>"
            "<select name='provider' id='provider'>"
@@ -191,6 +209,14 @@ void runWiFiManagerSetup(bool forcePortal) {
            "</select><br/>",
            dexRegion == "ous" ? " selected" : "", dexRegion == "us" ? " selected" : "", dexRegion == "jp" ? " selected" : "");
 
+  snprintf(alarmHtml, sizeof(alarmHtml),
+           "<br/><label for='alarm'>Alarma sonora (altavoz)</label>"
+           "<select name='alarm' id='alarm'>"
+           "<option value='1'%s>Activada: pita al salir de los umbrales</option>"
+           "<option value='0'%s>Desactivada</option>"
+           "</select><br/>",
+           alarmEnabled ? " selected" : "", alarmEnabled ? "" : " selected");
+
   WiFiManagerParameter custom_hint(
     "<p style='font-size:.85em;color:#8a94a0'>"
     "<b>LibreLinkUp:</b> email y contraseña de la cuenta de LibreLinkUp (seguidor).<br/>"
@@ -202,6 +228,7 @@ void runWiFiManagerSetup(bool forcePortal) {
   WiFiManagerParameter custom_region(regionHtml);
   WiFiManagerParameter custom_low("low", "Umbral bajo (mg/dL)", lowBuf, 5);
   WiFiManagerParameter custom_high("high", "Umbral alto (mg/dL)", highBuf, 5);
+  WiFiManagerParameter custom_alarm(alarmHtml);
 
   WiFiManager wm;
   wm.setTitle("Glucosa CYD");
@@ -214,11 +241,15 @@ void runWiFiManagerSetup(bool forcePortal) {
   wm.addParameter(&custom_region);
   wm.addParameter(&custom_low);
   wm.addParameter(&custom_high);
+  wm.addParameter(&custom_alarm);
 
   // Los desplegables no los gestiona WiFiManager: se leen del formulario al guardar.
   wm.setSaveParamsCallback([&]() {
     if (wm.server->hasArg("provider")) {
       provider = wm.server->arg("provider") == "dexcom" ? PROV_DEXCOM : PROV_LIBRE;
+    }
+    if (wm.server->hasArg("alarm")) {
+      alarmEnabled = wm.server->arg("alarm") != "0";
     }
     if (wm.server->hasArg("region")) {
       String r = wm.server->arg("region");
@@ -762,6 +793,50 @@ void clearReadingState() {
   lastHistFetch = 0;
   drawnStale = false;
   needsBackground = true;
+  alarmReset();
+}
+
+// ============================================================
+// ALARMA SONORA
+// ============================================================
+
+beeper::Controller alarmCtl;
+bool speakerOn = false;
+
+// Enciende o apaga el altavoz (tono cuadrado por PWM a través del amplificador de la CYD).
+void speakerSet(bool on) {
+  if (on == speakerOn) return;
+  speakerOn = on;
+  if (on) {
+    ledcSetup(ALARM_PWM_CHANNEL, ALARM_FREQ_HZ, 8);
+    ledcAttachPin(ALARM_PIN, ALARM_PWM_CHANNEL);
+    ledcWrite(ALARM_PWM_CHANNEL, ALARM_DUTY);
+  } else {
+    ledcWrite(ALARM_PWM_CHANNEL, 0);
+    ledcDetachPin(ALARM_PIN);
+    pinMode(ALARM_PIN, OUTPUT);
+    digitalWrite(ALARM_PIN, LOW);   // en reposo, sin ruido
+  }
+}
+
+// Corta el pitido a tiempo. Hay que llamarla a menudo (se hace en idleWait()).
+void alarmTick() {
+  speakerSet(alarmCtl.tick(millis()));
+}
+
+void alarmReset() {
+  alarmCtl.reset();
+  speakerSet(false);
+}
+
+// Sustituye a delay(): espera `ms` sin dejar de atender el altavoz, para que un
+// pitido dure 5 s aunque el bucle esté "durmiendo".
+void idleWait(unsigned long ms) {
+  unsigned long start = millis();
+  while (millis() - start < ms) {
+    alarmTick();
+    delay(25);
+  }
 }
 
 void setup() {
@@ -774,6 +849,8 @@ void setup() {
   tft.fillScreen(ui::BG);
 
   pinMode(BOOT_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(ALARM_PIN, OUTPUT);
+  digitalWrite(ALARM_PIN, LOW);
 
   ui::drawMessage(tft, "Iniciando…");
 
@@ -807,6 +884,7 @@ bool checkForReconfigureHold() {
 void loop() {
   if (checkForReconfigureHold()) {
     Serial.println("BOOT held for 3s during normal operation — entering config portal.");
+    alarmReset();
     runWiFiManagerSetup(true);
     startTimeSync();
     clearReadingState();
@@ -815,7 +893,7 @@ void loop() {
 
   if (WiFi.status() != WL_CONNECTED) {
     // La pila WiFi del ESP32 reintenta sola; mientras tanto no consultamos.
-    delay(1000);
+    idleWait(1000);
     return;
   }
 
@@ -846,7 +924,7 @@ void loop() {
     } else if (!haveReading) {
       ui::drawMessage(tft, "Sin datos", lastError.length() ? lastError : "Consultando…", ui::AMBER);
       needsBackground = true;
-      delay(1000);
+      idleWait(1000);
       return;
     } else {
       // Fallo con una lectura previa: se mantiene en pantalla marcada como obsoleta.
@@ -880,6 +958,14 @@ void loop() {
     view.rssi = rssi;
     view.low = lowThreshold;
     view.high = highThreshold;
+
+    // Alarma: solo con lecturas vigentes (una lectura obsoleta no dispara ni resetea nada).
+    if (!alarmEnabled) {
+      alarmReset();
+    } else if (!view.stale) {
+      alarmCtl.onReading(millis(), view.value, lowThreshold, highThreshold);
+      alarmTick();
+    }
 
     if (provider == PROV_DEXCOM) {
       view.hasDelta = cur.hasDelta;
@@ -916,5 +1002,5 @@ void loop() {
     }
   }
 
-  delay(1000);
+  idleWait(1000);
 }
