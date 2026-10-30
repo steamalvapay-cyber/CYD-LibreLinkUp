@@ -1,0 +1,74 @@
+name: Compilar firmware y publicar instalador web
+
+# Cada vez que subas cambios a la rama principal (o lo lances a mano desde la pestaña
+# Actions) se compila el firmware y se publica la página del instalador en GitHub Pages.
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Caché de PlatformIO
+        uses: actions/cache@v6
+        with:
+          path: ~/.platformio
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+
+      - name: Instalar PlatformIO
+        run: pip install platformio
+
+      - name: Compilar
+        run: pio run
+
+      - name: Preparar el sitio
+        run: |
+          set -euo pipefail
+          BUILD=.pio/build/esp32dev
+          mkdir -p site/firmware
+
+          cp -r web/. site/
+          cp docs/preview.png site/preview.png
+
+          cp "$BUILD/bootloader.bin" "$BUILD/partitions.bin" "$BUILD/firmware.bin" site/firmware/
+          BOOT_APP0=$(find ~/.platformio/packages -name boot_app0.bin | head -n 1)
+          test -n "$BOOT_APP0"
+          cp "$BOOT_APP0" site/firmware/boot_app0.bin
+
+          VERSION="4.0.${GITHUB_RUN_NUMBER}+${GITHUB_SHA::7}"
+          sed "s/__VERSION__/${VERSION}/" web/manifest.json > site/manifest.json
+
+          echo "Firmware generado:"
+          ls -l site/firmware
+          touch site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
