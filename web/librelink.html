@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>LibreLink · Glucosa CYD</title>
+<meta name="description" content="Cómo preparar una cuenta de LibreLinkUp para la pantalla de glucosa CYD con FreeStyle Libre.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="page">
+  <a class="back" href="./">← Volver al instalador</a>
+  <p class="eyebrow">FreeStyle Libre</p>
+  <h1>Configurar LibreLink</h1>
+  <p class="lead">
+    La pantalla no lee tu app de FreeStyle LibreLink directamente: entra en <b>LibreLinkUp</b>,
+    la app de seguimiento de Abbott. Para ello necesita una <b>cuenta de LibreLinkUp conectada</b>
+    a la tuya. Es gratis y se prepara en unos 10 minutos.
+  </p>
+
+  <section class="panel">
+    <h2>Resumen: qué necesitas</h2>
+    <ul class="list">
+      <li>La app <b>FreeStyle LibreLink</b> con tu sensor ya funcionando (la tiene quien lleva el sensor).</li>
+      <li>Una cuenta de <b>LibreLinkUp</b> a la que se le haya enviado una invitación desde esa app.</li>
+      <li>El <b>email y la contraseña de esa cuenta de LibreLinkUp</b>: son los que se escriben en la pantalla.</li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>Paso 1 · Invitar a una cuenta de LibreLinkUp</h2>
+    <p style="color:var(--muted)">Lo hace quien lleva el sensor, desde la app <b>FreeStyle LibreLink</b>.</p>
+    <ol class="steps">
+      <li>Abre el menú de la app (<b>Menú de navegación</b>).</li>
+      <li>Entra en <b>Aplicaciones conectadas</b> (<i>Connected Apps</i>).</li>
+      <li>En la sección <b>LibreLinkUp</b> pulsa <b>Conectar</b> o <b>Administrar</b>.</li>
+      <li>Pulsa <b>Añadir conexión</b> (<i>Add Connection</i>).</li>
+      <li>Escribe el <b>nombre, los apellidos y el email</b> de la persona (o tuyo, ver más abajo) y pulsa <b>Añadir</b>. Se envía una invitación por correo a ese email.</li>
+    </ol>
+    <p class="caption" style="text-align:left;margin-top:14px">Los nombres exactos de los menús pueden cambiar un poco según la versión de la app y el idioma.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Paso 2 · Crear la cuenta de LibreLinkUp y aceptar</h2>
+    <p style="color:var(--muted)">Lo hace la persona que recibe la invitación (o tú, con ese segundo email).</p>
+    <ol class="steps">
+      <li>Abre el <b>correo de invitación</b> que llegó a ese email y sigue el enlace para descargar <b>LibreLinkUp</b> (App Store o Google Play).</li>
+      <li>Abre la app y elige <b>Crear cuenta</b>. Usa <b>el mismo email al que llegó la invitación</b>, elige una contraseña y acepta los términos.</li>
+      <li>Inicia sesión y <b>acepta la conexión</b> que aparece. Hasta que no se acepta, no hay datos.</li>
+      <li>Comprueba que en la app ya ves la glucosa. Si la ves ahí, la pantalla también podrá verla.</li>
+    </ol>
+  </section>
+
+  <section class="panel">
+    <h2>¿Quiero ver mis propios datos?</h2>
+    <p>
+      LibreLinkUp está pensado para seguir a otra persona, así que no puedes invitarte con el mismo email
+      que ya usas en LibreLink. La solución más habitual es <b>usar un segundo email tuyo</b> (otra cuenta
+      de correo): le envías la invitación y creas con él la cuenta de LibreLinkUp. Esa cuenta es la que
+      se pone en la pantalla.
+    </p>
+    <p style="margin-bottom:0">
+      Tener una cuenta de seguidor <b>dedicada</b> tiene otra ventaja: la contraseña que guarda la placa
+      solo da acceso a la lectura, no a tu cuenta principal de LibreLink.
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>Paso 3 · Configurar la pantalla</h2>
+    <p style="color:var(--muted)">En el portal <code>CYD-Glucosa</code> que abre la placa tras instalarla:</p>
+    <table class="field-table">
+      <tr><td>Servicio</td><td><b>LibreLinkUp (FreeStyle Libre)</b></td></tr>
+      <tr><td>Email o usuario</td><td>El email de la cuenta de <b>LibreLinkUp</b></td></tr>
+      <tr><td>Contraseña</td><td>La contraseña de esa cuenta</td></tr>
+      <tr><td>Región de Dexcom</td><td>Déjalo como está (solo se usa con Dexcom)</td></tr>
+      <tr><td>Umbrales</td><td>Los valores bajo y alto con los que cambian los colores. Por defecto 70 y 180 mg/dL.</td></tr>
+    </table>
+    <p class="caption" style="text-align:left;margin-top:14px">
+      La región de LibreLinkUp (Europa, EE. UU.…) se detecta sola.
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>Si algo falla</h2>
+    <ul class="list">
+      <li><b>«Revisa email y contraseña»</b>: comprueba que puedes iniciar sesión en la app LibreLinkUp con esos mismos datos. Cuidado con espacios y con símbolos al teclear la contraseña. Para corregirlo, mantén pulsado <code>BOOT</code> unos 3 s con la placa encendida.</li>
+      <li><b>«Cuenta rechazada: revisa datos»</b>: tras 3 intentos fallidos la placa deja de intentarlo para no bloquear la cuenta. Reconfigúrala con <code>BOOT</code>.</li>
+      <li><b>«Sin lecturas del sensor»</b> o <b>«Sin conexiones»</b>: la invitación no está aceptada o el sensor no está activo. Mira qué ve la app LibreLinkUp.</li>
+      <li><b>«Login: error HTTP 4xx»</b>: Abbott puede haber cambiado la API. Revisa si hay una versión nueva del proyecto.</li>
+      <li><b>Dato en gris con «sin datos · hace X min»</b>: el sensor lleva más de 15 minutos sin enviar lecturas (móvil sin conexión, Bluetooth apagado, sensor caducado…).</li>
+    </ul>
+  </section>
+
+  <section class="panel notice">
+    <h2>Importante</h2>
+    <p>
+      La pantalla usa la API no oficial de LibreLinkUp y no es un producto sanitario. No sustituye a la app
+      ni al lector oficiales: no tomes decisiones de tratamiento solo con ella. Más información oficial en
+      la <a href="https://www.diabetescare.abbott/support/librelinkup.html" target="_blank" rel="noopener">página de ayuda de LibreLinkUp de Abbott</a>.
+    </p>
+  </section>
+
+  <footer>
+    ¿Usas Dexcom? <a href="dexcom.html">Ver los pasos de Dexcom</a> · <a href="./">Volver al instalador</a>
+  </footer>
+</main>
+</body>
+</html>

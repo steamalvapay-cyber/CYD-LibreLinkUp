@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Glucosa CYD · Instalador</title>
+<meta name="description" content="Instala en tu ESP32 CYD una pantalla minimalista de glucosa con LibreLinkUp o Dexcom, directamente desde el navegador.">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="https://cdn.jsdelivr.net/npm/esp-web-tools@10/dist/web/install-button.js?module"></script>
+</head>
+<body>
+<main class="home">
+  <div>
+    <p class="eyebrow">ESP32 · CYD · LibreLinkUp · Dexcom</p>
+    <h1>Tu glucosa, de un vistazo.</h1>
+    <p class="lead">
+      Instala en tu placa CYD (ESP32-2432S028R) una pantalla minimalista con el valor,
+      la tendencia y las últimas lecturas. Funciona con <b>FreeStyle Libre</b> (LibreLinkUp)
+      y con <b>Dexcom</b>. Todo desde el navegador, sin programas.
+    </p>
+
+    <esp-web-install-button manifest="manifest.json">
+      <button slot="activate" class="btn">Instalar en mi CYD</button>
+      <span slot="unsupported" class="warn">Este navegador no admite la instalación. Usa Chrome o Edge en un ordenador.</span>
+      <span slot="not-allowed" class="warn">Esta página tiene que abrirse por HTTPS para poder instalar.</span>
+    </esp-web-install-button>
+    <p class="meta" id="meta"></p>
+  </div>
+
+  <div class="device-col">
+    <div class="device"><img src="preview.png" width="640" height="480" alt="Vista previa de la pantalla: 128 mg/dL, tendencia estable, barra de rango y últimas lecturas"></div>
+    <p class="caption">Vista previa simulada de la pantalla</p>
+  </div>
+
+  <section class="panel wide">
+    <h2>¿Qué sensor usas?</h2>
+    <p style="color:var(--muted);margin-bottom:16px">
+      Antes de configurar la pantalla necesitas una cuenta que pueda leer tus datos.
+      Cada servicio funciona distinto: elige el tuyo y sigue los pasos.
+    </p>
+    <div class="choose">
+      <a class="card" href="librelink.html">
+        <strong>LibreLink</strong>
+        <span>FreeStyle Libre 2 / 3. Se usa una cuenta de seguidor de LibreLinkUp.</span>
+        <em>Cómo configurar o crear la cuenta →</em>
+      </a>
+      <a class="card" href="dexcom.html">
+        <strong>Dexcom</strong>
+        <span>Dexcom G7, G6 y ONE+. Se usa la cuenta de quien lleva el sensor, con Share activado.</span>
+        <em>Cómo configurar o crear la cuenta →</em>
+      </a>
+    </div>
+  </section>
+
+  <section class="panel wide">
+    <h2>Cómo se instala</h2>
+    <ol class="steps">
+      <li><b>Prepara tu cuenta</b> en la página de LibreLink o de Dexcom (arriba). Es la parte que más tiempo lleva.</li>
+      <li><b>Conecta la CYD al ordenador</b> con un cable USB que transmita datos (algunos solo cargan).</li>
+      <li>Pulsa <b>Instalar en mi CYD</b> y elige el puerto de la placa. Si falla, mantén pulsado <code>BOOT</code> mientras pulsas <code>RST</code> y vuelve a intentarlo.</li>
+      <li>Al terminar, la pantalla muestra una WiFi llamada <code>CYD-Glucosa</code>. <b>Conéctate desde el móvil.</b></li>
+      <li>Se abre una página (o entra en <code>192.168.4.1</code>). Elige <b>tu servicio</b>, tu WiFi, los datos de la cuenta y los umbrales.</li>
+      <li>La placa se reinicia y empieza a mostrar la glucosa. Para volver a configurar, mantén pulsado <code>BOOT</code> unos 3 segundos con la placa ya encendida.</li>
+    </ol>
+  </section>
+
+  <section class="panel wide">
+    <h2>Qué muestra</h2>
+    <ul class="list">
+      <li>Valor actual en grande, con color según tus umbrales (verde, ámbar o rojo).</li>
+      <li>Flecha de tendencia y variación de los últimos ~5 minutos.</li>
+      <li>Barra de posición dentro del rango 40–300 mg/dL y las últimas 12 lecturas.</li>
+      <li>Hora real de la lectura: si el sensor deja de enviar datos, la pantalla lo marca en gris pasados 15 minutos.</li>
+      <li>Aviso en pantalla si falla el acceso, e icono de señal WiFi.</li>
+    </ul>
+  </section>
+
+  <section class="panel wide notice">
+    <h2>Importante</h2>
+    <p>
+      Este proyecto usa las APIs no oficiales de LibreLinkUp y de Dexcom Share y no es un producto sanitario.
+      No sustituye al lector ni a la app oficiales: no tomes decisiones de tratamiento
+      basándote solo en esta pantalla. Los datos pueden tener retraso o dejar de funcionar si Abbott o Dexcom cambian sus servicios.
+    </p>
+  </section>
+
+  <footer>
+    <a id="repo" href="https://github.com/mulscully/CYD_LibreLinkUp_glucose_ConfigScreen" target="_blank" rel="noopener">Código fuente</a>
+    · basado en el proyecto de mulscully (MIT) · fuente Poppins (OFL)
+  </footer>
+</main>
+
+<script>
+  // Versión del firmware que se va a instalar (la escribe el workflow en manifest.json).
+  fetch("manifest.json", { cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(function (m) {
+      document.getElementById("meta").textContent = "Versión " + m.version + " · requiere Chrome o Edge";
+    })
+    .catch(function () {});
+
+  // Si la página está en GitHub Pages (usuario.github.io/repo) enlaza a su propio repositorio.
+  (function () {
+    var host = location.hostname;
+    if (host.endsWith(".github.io")) {
+      var user = host.split(".")[0];
+      var repo = location.pathname.split("/").filter(Boolean)[0];
+      if (user && repo) document.getElementById("repo").href = "https://github.com/" + user + "/" + repo;
+    }
+  })();
+</script>
+</body>
+</html>

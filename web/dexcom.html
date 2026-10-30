@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Dexcom · Glucosa CYD</title>
+<meta name="description" content="Cómo preparar la cuenta de Dexcom (Share) para la pantalla de glucosa CYD con Dexcom G7, G6 o ONE+.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="page">
+  <a class="back" href="./">← Volver al instalador</a>
+  <p class="eyebrow">Dexcom G7 · G6 · ONE+</p>
+  <h1>Configurar Dexcom</h1>
+  <p class="lead">
+    La pantalla lee los datos a través de <b>Dexcom Share</b>, el servicio con el que la app de Dexcom
+    comparte la glucosa con sus seguidores. Funciona distinto que LibreLinkUp, así que lee primero
+    las diferencias importantes.
+  </p>
+
+  <section class="panel notice">
+    <h2>Diferencias importantes con LibreLink</h2>
+    <ul class="list">
+      <li>Se usan <b>el usuario y la contraseña de quien lleva el sensor</b> (la cuenta de la app Dexcom G7, ONE+ o G6), <b>no</b> los de un seguidor ni los de la app Dexcom Follow.</li>
+      <li><b>Share tiene que estar activado</b>, y para eso Dexcom exige tener al menos un seguidor invitado.</li>
+      <li>Hay que indicar la <b>región</b>: en España y el resto de Europa es «Europa y resto del mundo».</li>
+      <li>No funciona con <b>Dexcom Stelo</b>, que no es compatible con Share.</li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>Paso 1 · Tener la cuenta de Dexcom</h2>
+    <ol class="steps">
+      <li>La cuenta se crea al abrir por primera vez la <b>app de Dexcom</b> de tu sensor (Dexcom G7, Dexcom ONE+ o G6): te pide <b>crear una cuenta</b> o iniciar sesión, y el sensor queda asociado a ella. Si ya usas la app, <b>ya la tienes</b>.</li>
+      <li>Apunta el <b>usuario</b> con el que entras. Puede ser un nombre de usuario, un <b>email</b> o un <b>teléfono</b> con prefijo y «+» delante (por ejemplo <code>+34600111222</code>). Escríbelo en la pantalla exactamente igual.</li>
+      <li>Comprueba que tu contraseña funciona entrando en el gestor de cuentas de Dexcom para Europa: <a href="https://uam2.dexcom.com" target="_blank" rel="noopener">uam2.dexcom.com</a>. Si no entras ahí, tampoco funcionará en la pantalla.</li>
+    </ol>
+  </section>
+
+  <section class="panel">
+    <h2>Paso 2 · Activar Share e invitar a un seguidor</h2>
+    <p style="color:var(--muted)">Se hace desde la app de Dexcom de quien lleva el sensor.</p>
+    <ol class="steps">
+      <li>En la app, pulsa el icono <b>Share</b> (en algunas versiones está en la pestaña <b>Conexiones</b>) y sigue las indicaciones de configuración.</li>
+      <li>Pulsa <b>Invitar a seguidores</b> (<i>Invite Followers</i>) e introduce el <b>email</b> de la persona. Puede ser un familiar o <b>un segundo email tuyo</b>. Admite hasta 10 seguidores.</li>
+      <li>Elige qué datos puede ver y pulsa <b>Siguiente</b> y <b>Enviar invitación</b>.</li>
+      <li>Recomendado: la persona invitada abre el correo, instala <b>Dexcom Follow</b> y completa la configuración. Así te aseguras de que Share queda activo.</li>
+    </ol>
+    <p class="caption" style="text-align:left;margin-top:14px">Los nombres exactos de los menús pueden variar según la app (G7, ONE+, G6) y la versión.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Paso 3 · Configurar la pantalla</h2>
+    <p style="color:var(--muted)">En el portal <code>CYD-Glucosa</code> que abre la placa tras instalarla:</p>
+    <table class="field-table">
+      <tr><td>Servicio</td><td><b>Dexcom (G7, G6, ONE+)</b></td></tr>
+      <tr><td>Email o usuario</td><td>El usuario de <b>quien lleva el sensor</b> (paso 1)</td></tr>
+      <tr><td>Contraseña</td><td>La contraseña de esa misma cuenta</td></tr>
+      <tr><td>Región de Dexcom</td><td><b>Europa y resto del mundo</b> (EE. UU. solo si tu cuenta es de allí; Japón para cuentas japonesas)</td></tr>
+      <tr><td>Umbrales</td><td>Los valores bajo y alto con los que cambian los colores. Por defecto 70 y 180 mg/dL.</td></tr>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Si algo falla</h2>
+    <ul class="list">
+      <li><b>«Usuario o contraseña incorrectos»</b>: revisa la región, el formato del usuario (teléfono con «+» y prefijo) y que sea la cuenta de quien lleva el sensor, no la de un seguidor. Comprueba que entras en <a href="https://uam2.dexcom.com" target="_blank" rel="noopener">uam2.dexcom.com</a>.</li>
+      <li><b>«Cuenta bloqueada: espera un rato»</b>: Dexcom bloquea temporalmente la cuenta tras varios intentos fallidos. Espera un rato antes de volver a probar. La placa deja de intentarlo tras 3 fallos seguidos para no empeorarlo.</li>
+      <li><b>«Cuenta rechazada: revisa datos»</b>: la placa ha parado tras 3 intentos fallidos. Corrige los datos manteniendo pulsado <code>BOOT</code> unos 3 s con la placa encendida.</li>
+      <li><b>«Sin lecturas (¿Share activado?)»</b>: el acceso funciona pero no hay datos. Comprueba que hay al menos un seguidor invitado y que el sensor está activo y enviando datos.</li>
+      <li><b>Dato en gris con «sin datos · hace X min»</b>: el sensor lleva más de 15 minutos sin enviar (móvil sin datos, Bluetooth apagado, sensor en calentamiento…). Dexcom envía una lectura cada 5 minutos.</li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>Seguridad de tu cuenta</h2>
+    <p style="margin-bottom:0">
+      Con Dexcom, la placa guarda la <b>contraseña real de tu cuenta</b> (no hay una cuenta de seguidor
+      solo de lectura). Usa una contraseña que no repitas en otros sitios y, si pierdes o regalas la placa,
+      <b>cámbiala</b> desde <a href="https://uam2.dexcom.com" target="_blank" rel="noopener">uam2.dexcom.com</a>.
+    </p>
+  </section>
+
+  <section class="panel notice">
+    <h2>Importante</h2>
+    <p>
+      La pantalla usa la API no oficial de Dexcom Share y no es un producto sanitario. No sustituye a la app
+      ni al receptor oficiales: no tomes decisiones de tratamiento solo con ella. Dexcom puede cambiar su servicio
+      sin aviso. Información oficial en <a href="https://www.dexcom.com/en-ie/faqs/how-do-i-set-up-share-and-invite-followers" target="_blank" rel="noopener">cómo configurar Share e invitar a seguidores</a>.
+    </p>
+  </section>
+
+  <footer>
+    ¿Usas FreeStyle Libre? <a href="librelink.html">Ver los pasos de LibreLink</a> · <a href="./">Volver al instalador</a>
+  </footer>
+</main>
+</body>
+</html>
